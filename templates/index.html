@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+  <title>Market Risk Monitor</title>
+  <meta name="author" content="name">
+  <meta name="description" content="description here">
+  <meta name="keywords" content="keywords,here">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.5/superhero/bootstrap.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script src="https://code.highcharts.com/stock/highstock.js"></script>
+  <script>
+	  var marketData = {{market | safe}};
+	  var lossProbData = {{lossProb | safe}};
+
+	  var market = [];
+	  var lossProb = [];
+	  var dates = Object.keys(lossProbData);
+
+	  $(function () {
+	  	for(i=0; i < dates.length;  i+=1){
+			lossProb.push([new Date(parseFloat(dates[i])), lossProbData[dates[i]]]);
+			market.push([new Date(parseFloat(dates[i])), marketData[dates[i]]]);
+	  	}
+
+		// create the chart
+		$('#mainChart').highcharts('StockChart', {
+				chart:{
+					height: 700,
+					backgroundColor: '#CACED2'
+				},
+			    rangeSelector: {
+			        selected: 150
+			    },
+			    tooltip: {
+		            valueDecimals: 3
+		        },
+				/*
+			    title: {
+			        text: 'DJIA Risk of a >10% Decline in the Next 3 Months'
+			    },
+				*/
+			    yAxis: [{
+			    	type: 'logarithmic',
+			        labels: {
+			            align: 'right',
+			            x: -3
+			        },
+			        title: {
+			            text: 'S&P 500'
+			        },
+			        height: '50%',
+			        lineWidth: 2
+			    }, {
+			        labels: {
+			            align: 'right',
+			            x: -3
+			        },
+			        title: {
+			            text: 'Loss Probability'
+			        },
+			        top: '50%',
+			        height: '50%',
+			        offset: 0,
+			        lineWidth: 2,
+
+			        plotLines: [{
+	                    value: .05,
+	                    color: 'black',
+	                    dashStyle: 'solid',
+	                    width: 3,
+	                    label: {
+	                        text: 'Danger',
+	                        style: {
+	                        	color: 'black',
+	                        	fontWeight: 'bold'
+	                        }
+	                    }
+	                }]
+			    }],
+
+			    series: [{
+			        type: 'line',
+			        name: 'Market',
+			        data: market,
+			        color: '#2b3e50'
+			    }, {
+			        type: 'area',
+			        name: 'Probability of >10% Decline in the Next Month',
+			        data: lossProb,
+			        yAxis: 1,
+			        color: '#c71c22'
+			    }]
+			});
+		});
+  </script>
+  <style>
+	body{
+		padding-top: 70px;
+	}
+  	@import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,900|Oswald);
+	.status {
+	    font-family: 'Source Sans Pro', sans-serif;
+	}
+	.status .panel-title {
+	    font-family: 'Oswald', sans-serif;
+	    font-size: 72px;
+	    font-weight: bold;
+	    color: #fff;
+	    line-height: 45px;
+	    padding-top: 20px;
+	    letter-spacing: -0.8px;
+	}
+	.smaller{
+	    font-size: 42px !important;
+	}
+	.gray-body{
+		background-color: #CACED2;
+		color: #2b3e50;
+	}
+  </style>
+ </head>
+ <body>
+ 	<nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Market Risk Monitor updated through {{latestDate}}</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+            	<a data-toggle="modal" data-target="#myModal" id="explain">
+            		<span style="font-size:1.3em;" class="glyphicon glyphicon-question-sign" aria-hidden="true">Explanation</span>
+            	</a>
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+    <div class="container">
+    	<div class="row">
+	  		<div class="col-md-12">
+		 		<div class="panel panel-primary">
+				  <div class="panel-heading">
+				  	<h3>Change in Probability of a >10% Decline in the Next 3 Months</h3>
+				  </div>
+				  <div class="panel-body">
+				    {% for name, value in lossProbDiff.iteritems() %}
+			  		<div class="col-xs-6 col-md-3">
+			            <div class="panel status panel-{% if value<0 %}success{% else %}danger{% endif %}">
+			                <div class="panel-heading">
+			                    <h1 class="panel-title text-center">{{ value|round(2, 'floor') }}%</h1>
+			                </div>
+			                <div class="panel-body text-center gray-body">                        
+			                    <strong>
+			                    {{ name }}-Day Change
+			                    </strong>
+			                </div>
+			            </div>
+			        </div>
+			        {% endfor %}
+				  </div>
+				</div>
+		  	</div>
+	  	</div>
+	 	<div class="row">
+		 	<div class="col-md-12">
+		 		<div class="panel panel-primary">
+				  <div class="panel-heading">
+				  	<h3>S&P 500 vs Probability of a >10% Decline in the Next 3 Months</h3>
+				  </div>
+				  <div class="panel-body">
+				    <div id="mainChart"></div>
+				  </div>
+				</div>
+		  	</div>
+	  	</div>
+	  	<div class="row">
+	  		<div class="col-md-12">
+		 		<div class="panel panel-primary">
+				  <div class="panel-heading">
+				  	<h3>Model Inputs</h3>
+				  </div>
+				  <div class="panel-body">
+				    {% for name, value in inputs.iteritems() %}
+			  		<div class="col-xs-6 col-md-2">
+			            <div class="panel status panel-info">
+			                <div class="panel-heading">
+			                    <h1 class="panel-title text-center smaller">{{ value|round(2, 'floor') }}%</h1>
+			                </div>
+			                <div class="panel-body text-center gray-body">                        
+			                    <strong>
+			                    {{ name }}-Day Return
+			                    </strong>
+			                </div>
+			            </div>
+			        </div>
+			        {% endfor %}
+				  </div>
+				</div>
+		  	</div>
+	  	</div>
+  	</div>
+
+  	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title" id="myModalLabel">Explanation</h4>
+	      </div>
+	      <div class="modal-body">
+	      	This model was built to predict the probability of a decline of greater than 10% in the S&P 500 stock market index. The training period encompassed the period from January 1955 to June 2015. The model takes as its input various rates of change periods and was trained to classify the future 3-month return as either greater or less than -10%.
+	      	</p>
+	      	The model never predicts that a large correction is ever more likely than not (probability never exceeds 50%), but the probability of a major decline does appear to rise in advance of some of the major market drawdowns in the training period. Another version of this model was created but trained only through the end of 2000. The model was then tested from 2000 through June of 2015 and was found exhibit the same kind of cautionary rise in advance of the financial crisis of 2008-09. This is evidence of at least some amount of utility in determining changes at market turning points. However, in all tests in and out-of-sample, using a low threshold to initiate a defensive trading decision always led to many false positives, in exchange for correctly predicting the major downturns. 
+	      	</p>
+	      	This app will continuously apply this static model to the markets going forward to examine what the behavior of this indicator is in a live test. Below is the logistic regression model used to determine the probability of a major downturn.
+	      	</p></p>
+	      	<hr>
+	      	<img src="http://latex.codecogs.com/png.download?%5Clarge%20Probability%5Cquad%3D%5Cquad%20%5Cfrac%7Be%5Ex%7D%7B1%20+%20e%5Ex%7D">
+			<hr>
+			<img src="http://latex.codecogs.com/png.download?%5Clarge%20x%5Cquad%20%3D%5Cquad%20%5Cnewline%20-2.7377%5Cnewline%20-0.6921%5Cquad%20*%5Cquad%20%7F21DayReturn%5Cnewline%20-1.0231%5Cquad%20*%5Cquad%2063DayReturn%7F%5Cnewline%20-1.1308%5Cquad%20*%5Cquad%20126DayReturn%7F%5Cnewline%20-3.3493%5Cquad%20*%5Cquad%20252DayReturn%5Cnewline%20+0.6213%5Cquad%20*%5Cquad%20504DayReturn%5Cnewline%20+0.0314%5Cquad%20*%5Cquad%20756DayReturn%7B%5Ccolor%7BYellow%7D%20%7D" />
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	        <button type="button" class="btn btn-primary">Save changes</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+ </body>
+</html>
+

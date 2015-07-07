@@ -1,0 +1,8 @@
+This model was built to predict the probability of a decline of greater than 10% in the S&P 500 stock market index. The training period encompassed the period from January 1955 to June 2015. The model takes as its input various rates of change periods and was trained to classify the future 3-month return as either greater or less than -10%.
+
+The model never predicts that a large correction is ever more likely than not (probability never exceeds 50%), but the probability of a major decline does appear to rise in advance of some of the major market drawdowns in the training period. Another version of this model was created but trained only through the end of 2000. The model was then tested from 2000 through June of 2015 and was found exhibit the same kind of cautionary rise in advance of the financial crisis of 2008-09. This is evidence of at least some amount of utility in determining changes at market turning points. However, in all tests in and out-of-sample, using a low threshold to initiate a defensive trading decision always led to many false positives, in exchange for correctly predicting the major downturns.
+
+This app will continuously apply this static model to the markets going forward to examine what the behavior of this indicator is in a live test. Below is the logistic regression model used to determine the probability of a major downturn.
+
+Deployed at:
+https://whispering-fortress-2947.herokuapp.com/
